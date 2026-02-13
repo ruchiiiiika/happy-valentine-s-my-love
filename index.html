@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Happy Valentine's Day</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              dancing: ['"Dancing Script"', 'cursive'],
+              playfair: ['"Playfair Display"', 'serif'],
+              sans: ['system-ui', 'sans-serif'],
+            },
+            colors: {
+              valentine: {
+                50: '#fff0f3',
+                100: '#ffcce0',
+                200: '#ff99c2',
+                300: '#ff66a3',
+                400: '#ff3385',
+                500: '#e60066',
+                600: '#b3004d',
+                700: '#800037',
+                800: '#4d0021',
+                900: '#1a000b',
+              }
+            },
+            animation: {
+              'float': 'float 6s ease-in-out infinite',
+              'float-delayed': 'float 6s ease-in-out 3s infinite',
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'pop-in': 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+              'particle-burst': 'particleBurst 0.5s ease-out forwards',
+              'fadeIn': 'fadeIn 2s ease-out forwards',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
+              },
+              popIn: {
+                '0%': { opacity: '0', transform: 'scale(0.5) rotate(-5deg)' },
+                '100%': { opacity: '1', transform: 'scale(1) rotate(0deg)' },
+              },
+              particleBurst: {
+                '0%': { transform: 'translate(-50%, -50%) scale(1)', opacity: '1' },
+                '100%': { transform: 'translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0)', opacity: '0' },
+              },
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden; /* Prevent scrolling globally */
+      }
+      /* Custom particle fall animation */
+      .heart-particle {
+        position: fixed;
+        top: -10vh;
+        transform: translateY(0);
+        animation: fall linear infinite;
+        z-index: 0;
+        pointer-events: none;
+      }
+      @keyframes fall {
+        to {
+          transform: translateY(110vh);
+        }
+      }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.564.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+
+      // ==========================================
+      // 🛠️ CONSTANTS & CONFIGURATION
+      // ==========================================
+      
+      const APP_CONFIG = {
+        recipientName: "Chutii", // Change this!
+        musicUrl: "music/ikmanwela.mp3",
+      };
+
+      const MEMORY_PHOTOS = [
+        { id: 1, url: "image/image1.jpg", caption: "Our first date 💗" },
+        { id: 2, url: "image/image2.jpg", caption: "Beach date 🌊" },
+        { id: 3, url: "image/image3.jpg", caption: "Arcade date 🏀" },
+        { id: 4, url: "image/image4.jpg", caption: "Painting date 🎨🖌️" },
+        { id: 5, url: "image/image5.jpg", caption: "Just being silly together 🤪" },
+        { id: 6, url: "image/image6.jpg", caption: "Forever my favorite person ❤️" }
+      ];
+
+      const LOVE_QUOTES = [
+        { id: 1, text: "In all the world, there is no heart for me like yours." },
+        { id: 2, text: "I love you not only for what you are, but for what I am when I am with you."},
+        { id: 3, text: "If I know what love is, it is because of you."},
+        { id: 4, text: "You are my sun, my moon, and all my stars."},
+        { id: 5, text: "I look at you and see the rest of my life in front of my eyes."},
+        { id: 6, text: "Every love story is beautiful, but ours is my favorite."},
+      ];
+
+      // ==========================================
+      // 🎨 ICONS (SVG Components)
+      // ==========================================
+      
+      const IconBase = ({ children, className, ...props }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>
+      );
+
+      const Heart = (props) => <IconBase {...props}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></IconBase>;
+      const ChevronLeft = (props) => <IconBase {...props}><path d="m15 18-6-6 6-6"/></IconBase>;
+      const ChevronRight = (props) => <IconBase {...props}><path d="m9 18 6-6-6-6"/></IconBase>;
+      const Music = (props) => <IconBase {...props}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></IconBase>;
+      const PauseCircle = (props) => <IconBase {...props}><circle cx="12" cy="12" r="10"/><line x1="10" x2="10" y1="15" y2="9"/><line x1="14" x2="14" y1="15" y2="9"/></IconBase>;
+      const X = (props) => <IconBase {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>;
+      const RotateCcw = (props) => <IconBase {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></IconBase>;
+      const Sparkles = (props) => <IconBase {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 9h4"/></IconBase>;
+      const PartyPopper = (props) => <IconBase {...props}><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12v0c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11v0c-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98v0C9.52 4.9 9 5.52 9 6.23V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"/></IconBase>;
+
+      // ==========================================
+      // 🧩 COMPONENTS
+      // ==========================================
+
+      // --- Floating Hearts Background ---
+      const FloatingHearts = () => {
+        const [hearts, setHearts] = useState([]);
+        useEffect(() => {
+          const newHearts = Array.from({ length: 20 }).map((_, i) => ({
+            id: i,
+            left: Math.random() * 100,
+            duration: Math.random() * 10 + 10,
+            delay: Math.random() * 10,
+            scale: Math.random() * 0.5 + 0.5,
+          }));
+          setHearts(newHearts);
+        }, []);
+
+        return (
+          <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+            {hearts.map((heart) => (
+              <div
+                key={heart.id}
+                className="heart-particle text-valentine-200/40 absolute top-0"
+                style={{
+                  left: `${heart.left}%`,
+                  fontSize: `${heart.scale * 2}rem`,
+                  animationDuration: `${heart.duration}s`,
+                  animationDelay: `-${heart.delay}s`,
+                }}
+              >
+                ❤
+              </div>
+            ))}
+          </div>
+        );
+      };
+
+      // --- Music Player ---
+      const MusicPlayer = () => {
+        const [isPlaying, setIsPlaying] = useState(false);
+        const audioRef = useRef(null);
+
+        useEffect(() => {
+          audioRef.current = new Audio(APP_CONFIG.musicUrl);
+          audioRef.current.loop = true;
+          return () => {
+            if (audioRef.current) audioRef.current.pause();
+          };
+        }, []);
+
+        const togglePlay = () => {
+          if (!audioRef.current) return;
+          if (isPlaying) {
+            audioRef.current.pause();
+          } else {
+            audioRef.current.play().catch(e => console.error("Playback failed:", e));
+          }
+          setIsPlaying(!isPlaying);
+        };
+
+        return (
+          <button
+            onClick={togglePlay}
+            className="fixed bottom-6 right-6 z-50 p-4 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-valentine-600 border-2 border-valentine-200 group"
+          >
+            {isPlaying ? (
+              <PauseCircle className="w-6 h-6 animate-pulse-slow" />
+            ) : (
+              <Music className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+            )}
+          </button>
+        );
+      };
+
+      // --- Hero Section ---
+      const Hero = () => {
+        const [text, setText] = useState('');
+        const fullText = `Haappy Valentine's Day, ${APP_CONFIG.recipientName}`;
+
+        useEffect(() => {
+          let index = 0;
+          const timer = setInterval(() => {
+            setText((prev) => prev + fullText.charAt(index));
+            index++;
+            if (index >= fullText.length) clearInterval(timer);
+          }, 100);
+          return () => clearInterval(timer);
+        }, []);
+
+        return (
+          <section className="h-full w-full flex flex-col items-center justify-center text-center px-4 relative z-10 pb-20">
+            <div className="animate-float mb-8">
+              <Heart className="w-24 h-24 text-valentine-500 fill-valentine-500 drop-shadow-xl" />
+            </div>
+            <h1 className="font-dancing text-5xl md:text-8xl text-valentine-800 drop-shadow-sm mb-6 min-h-[1.2em] max-w-4xl leading-tight">
+              {text}
+              <span className="animate-pulse text-valentine-400">|</span>
+            </h1>
+            <p className="font-playfair text-xl md:text-2xl text-valentine-700 max-w-2xl italic opacity-0 animate-[fadeIn_2s_ease-out_2s_forwards] px-4">
+              "To the world you may be one person, but to me you are the world!"
+            </p>
+          </section>
+        );
+      };
+
+      // --- Memory Lane (Balloon Game) ---
+      const Balloon = ({ color, onClick, visible, index }) => {
+        const [isPopping, setIsPopping] = useState(false);
+
+        useEffect(() => {
+          if (visible) setIsPopping(false);
+        }, [visible]);
+
+        const handleClick = (e) => {
+          e.stopPropagation();
+          setIsPopping(true);
+          setTimeout(onClick, 400);
+        };
+
+        if (!visible && !isPopping) return <div className="w-24 h-32 md:w-32 md:h-44 invisible pointer-events-none" />;
+
+        const getParticleStyle = (i) => {
+          const angle = (i / 8) * 360 * (Math.PI / 180);
+          const distance = 80 + Math.random() * 40;
+          const tx = Math.cos(angle) * distance;
+          const ty = Math.sin(angle) * distance;
+          return { '--tx': `${tx}px`, '--ty': `${ty}px` };
+        };
+
+        if (isPopping) {
+          return (
+            <div className="relative w-24 h-32 md:w-32 md:h-44 flex items-center justify-center pointer-events-none">
+              {[...Array(8)].map((_, i) => (
+                <div 
+                  key={i}
+                  className={`absolute top-1/2 left-1/2 w-3 h-3 rounded-full ${color} animate-particle-burst`}
+                  style={getParticleStyle(i)}
+                />
+              ))}
+            </div>
+          );
+        }
+
+        const animationClass = index % 2 === 0 ? 'animate-float' : 'animate-float-delayed';
+
+        return (
+          <div 
+            onClick={handleClick}
+            className={`relative w-24 h-32 md:w-32 md:h-44 cursor-pointer transition-all duration-300 hover:scale-110 hover:-translate-y-2 ${animationClass}`}
+          >
+            <div className={`w-full h-[80%] rounded-[50%] ${color} shadow-lg flex items-center justify-center relative opacity-90 backdrop-blur-sm border-l border-white/30`}>
+              <div className="absolute -bottom-16 left-1/2 w-[1px] h-16 bg-slate-400/60 -translate-x-1/2 origin-top"></div>
+              <div className="absolute top-[15%] left-[20%] w-[15%] h-[20%] bg-gradient-to-br from-white/90 to-transparent rounded-[50%] blur-[2px] rotate-[-45deg]"></div>
+              <div className="absolute -bottom-[4px] left-1/2 w-2 h-1.5 bg-inherit -translate-x-1/2 rounded-b-md"></div>
+            </div>
+          </div>
+        );
+      };
+
+      const Polaroid = ({ photo, onClose }) => (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md transition-all duration-500" onClick={onClose}>
+          <div className="relative bg-white p-4 pb-16 shadow-2xl rotate-1 max-w-sm w-full animate-pop-in cursor-default" onClick={e => e.stopPropagation()}>
+            <button onClick={onClose} className="absolute -top-3 -right-3 p-2 bg-white rounded-full text-slate-400 shadow-md hover:text-valentine-500 hover:bg-red-50 transition-all z-10">
+              <X size={20} />
+            </button>
+            <div className="w-full aspect-[4/5] overflow-hidden bg-slate-50 border border-slate-100 mb-6 shadow-inner">
+              <img src={photo.url} alt="Memory" className="w-full h-full object-cover" />
+            </div>
+            <p className="font-dancing text-2xl md:text-3xl text-center text-slate-800 px-2 leading-relaxed">{photo.caption}</p>
+          </div>
+        </div>
+      );
+
+      const MemoryLane = () => {
+        const [poppedState, setPoppedState] = useState(new Array(6).fill(false));
+        const [selectedPhoto, setSelectedPhoto] = useState(null);
+
+        const remainingCount = poppedState.filter(p => !p).length;
+
+        const handlePop = (index) => {
+          const newPopped = [...poppedState];
+          newPopped[index] = true;
+          setPoppedState(newPopped);
+          setSelectedPhoto(MEMORY_PHOTOS[index]);
+        };
+
+        const handleReset = () => setPoppedState(new Array(6).fill(false));
+
+        const balloonColors = ['bg-red-500', 'bg-purple-500', 'bg-orange-400', 'bg-rose-500', 'bg-yellow-400', 'bg-pink-500'];
+
+        return (
+          <section className="h-full w-full flex flex-col items-center justify-center p-4 relative overflow-hidden">
+            <div className="text-center mb-8 z-10 animate-[fadeIn_1s_ease-out] relative">
+              <h2 className="font-dancing text-4xl md:text-6xl text-valentine-800 drop-shadow-sm mb-3">
+                Pop the balloons, {APP_CONFIG.recipientName.split(' ')[0]}! 🎈
+              </h2>
+              <div className="h-8 flex items-center justify-center">
+                {remainingCount === 0 ? (
+                  <button onClick={handleReset} className="flex items-center gap-2 px-4 py-1.5 bg-valentine-500 text-white rounded-full text-sm font-bold shadow-md hover:bg-valentine-600 hover:scale-105 transition-all animate-pop-in">
+                    <RotateCcw size={14} /> Rewatch Memories
+                  </button>
+                ) : (
+                  <p className="font-playfair text-lg text-valentine-600 italic">
+                    {`${remainingCount} surprise${remainingCount !== 1 ? 's' : ''} remaining`}
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-12 gap-y-8 md:gap-x-20 md:gap-y-12 max-w-5xl mx-auto px-6 z-10">
+              {MEMORY_PHOTOS.slice(0, 6).map((photo, index) => (
+                <div key={photo.id} className="flex justify-center items-center">
+                  <Balloon index={index} color={balloonColors[index % balloonColors.length]} visible={!poppedState[index]} onClick={() => handlePop(index)} />
+                </div>
+              ))}
+            </div>
+            {selectedPhoto && <Polaroid photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />}
+          </section>
+        );
+      };
+
+      // --- Love Notes ---
+      const LoveNotes = () => {
+        const [currentQuote, setCurrentQuote] = useState(LOVE_QUOTES[0]);
+        const [isAnimating, setIsAnimating] = useState(false);
+
+        const generateQuote = () => {
+          setIsAnimating(true);
+          setTimeout(() => {
+            const randomIndex = Math.floor(Math.random() * LOVE_QUOTES.length);
+            setCurrentQuote(LOVE_QUOTES[randomIndex]);
+            setIsAnimating(false);
+          }, 300);
+        };
+
+        return (
+          <section className="h-full w-full flex flex-col items-center justify-center p-4 pb-20 relative z-10">
+            <div className="max-w-3xl w-full mx-auto text-center px-4">
+              <h2 className="font-dancing text-5xl md:text-6xl text-valentine-800 mb-8 md:mb-12 drop-shadow-sm">Love Notes</h2>
+              <div className="bg-white/80 backdrop-blur-md p-8 md:p-16 rounded-[2rem] shadow-2xl border border-white/50 min-h-[300px] flex flex-col justify-center items-center relative overflow-hidden transform transition-all hover:scale-[1.02]">
+                <div className={`transition-opacity duration-500 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+                  <p className="font-playfair text-2xl md:text-4xl text-valentine-800 italic mb-6 leading-relaxed">"{currentQuote.text}"</p>
+                  {currentQuote.author && <p className="text-valentine-500 font-sans uppercase tracking-widest text-sm font-semibold">— {currentQuote.author}</p>}
+                </div>
+                <Sparkles className="absolute -bottom-4 -right-4 w-32 h-32 text-valentine-200 opacity-20 rotate-12" />
+                <Sparkles className="absolute -top-4 -left-4 w-24 h-24 text-valentine-200 opacity-20 -rotate-12" />
+              </div>
+              <button onClick={generateQuote} className="mt-12 px-10 py-4 bg-valentine-500 hover:bg-valentine-600 text-white font-playfair font-bold text-xl rounded-full shadow-lg hover:shadow-valentine-300/50 hover:shadow-xl transition-all duration-300 transform active:scale-95 flex items-center gap-3 mx-auto border-2 border-white/20">
+                <Sparkles className="w-6 h-6 animate-pulse" /> Read Another Note
+              </button>
+            </div>
+          </section>
+        );
+      };
+
+      // --- Valentine Question ---
+      const ValentineQuestion = () => {
+        const [yesScale, setYesScale] = useState(1);
+        const [noPosition, setNoPosition] = useState({ x: 0, y: 0 });
+        const [noCount, setNoCount] = useState(0);
+        const [accepted, setAccepted] = useState(false);
+
+        const handleNoHover = () => {
+          const x = Math.random() * 250 - 125; 
+          const y = Math.random() * 250 - 125; 
+          setNoPosition({ x, y });
+          setNoCount(prev => prev + 1);
+          setYesScale(prev => prev + 0.3);
+        };
+
+        if (accepted) {
+          return (
+            <section className="h-full w-full flex flex-col items-center justify-center text-center p-4 pb-20 relative z-10 bg-white/30 backdrop-blur-sm">
+              <div className="animate-bounce mb-8 flex justify-center">
+                <PartyPopper className="w-24 h-24 text-valentine-500 drop-shadow-lg" />
+              </div>
+              <h2 className="font-dancing text-6xl md:text-8xl text-valentine-600 mb-8 leading-tight drop-shadow-sm">Yay! I knew you'd say Yes! ❤️</h2>
+              <p className="font-playfair text-2xl md:text-3xl text-valentine-800 max-w-2xl px-4">Can't wait to celebrate with you, {APP_CONFIG.recipientName}!</p>
+              <div className="mt-16 flex justify-center gap-8">
+                 <Heart className="w-16 h-16 text-red-500 fill-red-500 animate-ping" />
+                 <Heart className="w-16 h-16 text-pink-500 fill-pink-500 animate-bounce delay-100" />
+                 <Heart className="w-16 h-16 text-rose-500 fill-rose-500 animate-pulse delay-200" />
+              </div>
+            </section>
+          );
+        }
+
+        return (
+          <section className="h-full w-full flex flex-col items-center justify-center text-center p-4 pb-20 relative z-10">
+            <h2 className="font-dancing text-5xl md:text-7xl text-valentine-800 mb-16 drop-shadow-sm px-4">Will you be my Valentine?</h2>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-20 w-full relative h-[200px] md:h-auto">
+              <button onClick={() => setAccepted(true)} style={{ transform: `scale(${yesScale})` }} className="px-12 py-5 bg-green-500 hover:bg-green-600 text-white font-bold text-2xl rounded-2xl shadow-xl transition-all duration-200 z-20 border-b-8 border-green-700 active:border-b-0 active:translate-y-2">
+                Yes, absolutely! 🌹
+              </button>
+              <button 
+                onMouseEnter={handleNoHover} onClick={handleNoHover} 
+                style={{ transform: `translate(${noPosition.x}px, ${noPosition.y}px)`, transition: 'transform 0.2s ease-out' }}
+                className="px-12 py-5 bg-gray-400 hover:bg-gray-500 text-white font-bold text-2xl rounded-2xl shadow-xl z-10 cursor-not-allowed border-b-8 border-gray-600 absolute md:static"
+              >
+                {noCount === 0 ? "No" : noCount === 1 ? "Are you sure?" : noCount === 2 ? "Really sure?" : "Last chance!"}
+              </button>
+            </div>
+            {noCount > 0 && <p className="mt-12 font-playfair text-xl text-valentine-600 italic animate-pulse bg-white/50 px-4 py-2 rounded-full">(The Yes button is getting bigger...)</p>}
+          </section>
+        );
+      };
+
+      // --- Main App Component ---
+      const App = () => {
+        const [currentSlide, setCurrentSlide] = useState(0);
+        const slides = [
+          <Hero key="hero" />,
+          <MemoryLane key="memory" />,
+          <LoveNotes key="notes" />,
+          <ValentineQuestion key="question" />
+        ];
+
+        const nextSlide = () => setCurrentSlide(prev => Math.min(prev + 1, slides.length - 1));
+        const prevSlide = () => setCurrentSlide(prev => Math.max(prev - 1, 0));
+
+        return (
+          <main className="h-screen w-screen bg-gradient-to-br from-pink-100 via-red-50 to-rose-100 overflow-hidden relative selection:bg-valentine-200 selection:text-valentine-900 font-sans text-slate-800">
+            <FloatingHearts />
+            <div className="absolute inset-0 w-full h-full">
+              {slides.map((slide, index) => (
+                <div key={index} className={`absolute inset-0 w-full h-full transition-all duration-700 ease-in-out transform flex flex-col ${
+                  index === currentSlide ? 'opacity-100 translate-x-0 z-10' : index < currentSlide ? 'opacity-0 -translate-x-full z-0 pointer-events-none' : 'opacity-0 translate-x-full z-0 pointer-events-none'
+                }`}>
+                  {slide}
+                </div>
+              ))}
+            </div>
+            <div className="fixed bottom-8 left-0 right-0 z-50 flex flex-col items-center gap-4 pointer-events-none">
+              <div className="flex items-center gap-6 pointer-events-auto">
+                <button onClick={prevSlide} disabled={currentSlide === 0} className={`p-3 rounded-full bg-white/80 backdrop-blur-sm shadow-lg text-valentine-600 transition-all border border-valentine-200 ${currentSlide === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:scale-110 active:scale-95'}`}>
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <div className="flex gap-2">
+                  {slides.map((_, i) => (
+                    <button key={i} onClick={() => setCurrentSlide(i)} className={`transition-all duration-300 rounded-full ${i === currentSlide ? 'bg-valentine-500 w-8 h-2' : 'bg-valentine-300/50 w-2 h-2 hover:bg-valentine-400'}`} />
+                  ))}
+                </div>
+                <button onClick={nextSlide} disabled={currentSlide === slides.length - 1} className={`p-3 rounded-full bg-white/80 backdrop-blur-sm shadow-lg text-valentine-600 transition-all border border-valentine-200 ${currentSlide === slides.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:scale-110 active:scale-95'}`}>
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </div>
+              {currentSlide === slides.length - 1 && <p className="text-valentine-400 font-playfair text-xs opacity-80">Made with ❤️ just for you</p>}
+            </div>
+            <MusicPlayer />
+          </main>
+        );
+      };
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
